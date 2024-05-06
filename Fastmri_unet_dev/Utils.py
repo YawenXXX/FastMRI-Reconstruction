@@ -3,7 +3,7 @@ THis file is used for implement common used functions
 '''
 import numpy
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 import torch
 import Data.Fastmri_Data_Processing
@@ -56,9 +56,16 @@ def save_reconstruction(export_dir, reconstructions):
     Save reconstruction output
     Args:
         export_dir: save path for reconstruction output
-        reconstructions: reconstructions need to be saved
+        reconstructions: nd.array
 
     '''
 
-
+    export_dir.mkdir(exist_ok=True, parents=True)
+    for recons in reconstructions:
+        with h5py.File(export_dir / fname, 'w') as f:
+            f.create_dataset('reconstruction', data=recons)
+            if targets is not None:
+                f.create_dataset('target', data=targets[fname])
+            if inputs is not None:
+                f.create_dataset('input', data=inputs[fname])
 

@@ -20,7 +20,7 @@ import Training.unet_train as unet_train
 import Testing.unet_test as unet_test
 
 import Utils
-
+import matplotlib.pyplot as plt
 
 ROOT_DIR = os.path.abspath('.')
 
@@ -29,12 +29,12 @@ def arg_parser():
                                      , formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--batch-size', default=config_file.BATCH_SIZE, type=int, help='Batch Size')
     parser.add_argument('--GPU-NUM', type=int, default=0, help='GPU number to allocate')
-    parser.add_argument('--num-epochs', type=int, default=200, help='Number of epochs')
+    parser.add_argument('--num-epochs', type=int, default=300, help='Number of epochs')
     parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
     parser.add_argument('--in-chans', type=int, default=1, help='Size of input channels for network')
     parser.add_argument('--out-chans', type=int, default=1, help='Size of output channels for network')
     parser.add_argument('--device', type=str, default='cuda', help='device to run on')
-    parser.add_argument('--seed', type=int, default=430, help='Fdix random seed')
+    parser.add_argument('--seed', type=int, default=430, help='Fix random seed')
 
     args = parser.parse_args()
     return args
@@ -47,7 +47,7 @@ def main(args, mode='train'):
     input_test_dir = config_file.INPUT_TEST_DIR
     reconstruction_dir = config_file.RECONSTRUCTION_DIR
 
-    slice_idxs = config_file.SLICES
+    slice_idxs = [19, 20, 21]
     crop_size = config_file.CROP_SIZE
     batch_size = config_file.BATCH_SIZE
     max_num_data = config_file.MAX_FILE_LIMIT
@@ -97,19 +97,30 @@ def main(args, mode='train'):
         print(best_val_loss)
 
     elif mode == 'test':
-        # Output and save reconstructions
-        saved_model_path = config_file.OUTPUT_DIR
-        saved_models = sorted(glob.glob(os.path.join(saved_model_path, '*.pkl')), key=os.path.getmtime)
-        best_model = saved_models[38]
+        # # Output and save reconstructions
+        # saved_model_path = os.path.join(ROOT_DIR, 'saved_models_slice1_dp0.0_win11')
+        # saved_models = sorted(glob.glob(os.path.join(saved_model_path, '*.pkl')), key=os.path.getmtime)
+        # best_model = saved_models[86]
+        #
+        # recon, targets = unet_test.test(args, best_model, test_loader)
 
-        reconstructions = unet_test.test(args, best_model, test_loader)
+        # plotting
+        train_loss = np.load('train_loss_log_slice3_dp0.0_win11.npy')
+        val_loss = np.load('val_loss_log_slice3_dp0.0_win11.npy')
+
+        train_loss = train_loss.T
+        val_loss = val_loss.T
+
+        plt.figure()
+        plt.plot(train_loss[0], train_loss[1], label='Train Loss')
+        plt.plot(val_loss[0], val_loss[1], label='Validation Loss')
+        plt.legend(loc='best')
+        plt.show()
+
+        exit(0)
         # Utils.save_reconstruction(reconstruction_dir, reconstructions)
 
 if __name__ == '__main__':
     args = arg_parser()
 
-    main(args, mode='train')
-
-
-
-
+    main(args, mode='test')
